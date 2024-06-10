@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Trivia Game Room{% endblock %}
+
+{% block content %}
+    <h1>Room: {{ room_id }}</h1>
+    <div id="players" class="players"></div>
+    <div id="question" class="question"></div>
+    <input type="text" id="answer" placeholder="Your answer" class="answer-input">
+    <button onclick="submitAnswer()" class="submit-button">Submit Answer</button>
+    <div id="scores" class="scores"></div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const room = "{{ room_id }}";
+        const username = prompt("Enter your username");
+
+        socket.emit('join', { room, username });
+
+        socket.on('player_joined', (data) => {
+            const playersDiv = document.getElementById('players');
+            playersDiv.innerHTML += `<p>${data.username} joined the room.</p>`;
+        });
+
+        socket.on('new_question', (data) => {
+            document.getElementById('question').innerText = data.question;
+        });
+
+        socket.on('update_scores', (scores) => {
+            const scoresDiv = document.getElementById('scores');
+            scoresDiv.innerHTML = '';
+            for (const [player, score] of Object.entries(scores)) {
+                scoresDiv.innerHTML += `<p>${player}: ${score}</p>`;
+            }
+        });
+
+        socket.on('game_over', () => {
+            alert('Game over!');
+        });
+
+        function submitAnswer() {
+            const answer = document.getElementById('answer').value;
+            socket.emit('answer', { room, username, answer });
+            document.getElementById('answer').value = '';
+        }
+    </script>
+{% endblock %}

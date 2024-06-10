@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Add Trivia Question{% endblock %}
+
+{% block content %}
+    <h1>Add a Trivia Question</h1>
+    <form action="/add_question" method="POST">
+        <div>
+            <label for="question">Question:</label>
+            <input type="text" id="question" name="question" required>
+        </div>
+        <div>
+            <label for="answer">Answer:</label>
+            <input type="text" id="answer" name="answer" required>
+        </div>
+        <button type="submit">Add Question</button>
+    </form>
+{% endblock %}

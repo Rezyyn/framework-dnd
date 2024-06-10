@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}List of Trivia Questions{% endblock %}
+
+{% block content %}
+    <h1>List of Trivia Questions</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Question</th>
+                <th>Answer</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question in questions %}
+            <tr>
+                <td>{{ question.id }}</td>
+                <td>{{ question.question }}</td>
+                <td>{{ question.answer }}</td>
+                <td>
+                    <form action="{{ url_for('delete_question', question_id=question.id) }}" method="post">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

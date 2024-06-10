@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Trivia Game{% endblock %}
+
+{% block content %}
+    <h1>Welcome to the Trivia Game!</h1>
+    <form action="/create_room" method="POST">
+        <button type="submit">Create Room</button>
+    </form>
+
+    <h2>Games in Progress</h2>
+    <div id="games"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function fetchGames() {
+        try {
+            const response = await fetch('/get_rooms');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const rooms = await response.json();
+            console.log('Rooms:', rooms);  // Debugging log
+
+            const gamesDiv = document.getElementById('games');
+            gamesDiv.innerHTML = '';
+
+            if (rooms.length > 0) {
+                rooms.forEach(room => {
+                    const roomDiv = document.createElement('div');
+                    roomDiv.className = 'game';
+                    roomDiv.innerHTML = `
+                        <img src="/static/placeholder.png" alt="Game Image" class="game-image">
+                        <div class="game-details">
+                            <p>Room ID: ${room.room_id}</p>
+                            <p>Players: ${room.num_players}</p>
+                            <a href="/room/${room.room_id}" class="join-button">Join Room</a>
+                        </div>
+                    `;
+                    gamesDiv.appendChild(roomDiv);
+                });
+            } else {
+                gamesDiv.innerHTML = '<p>No games in progress</p>';
+            }
+        } catch (error) {
+            console.error('Error fetching games:', error);
+        }
+    }
+
+    fetchGames();
+</script>
+{% endblock %}
