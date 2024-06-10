@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 
@@ -17,11 +17,16 @@ from models import User
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Register blueprints
 from views import auth_bp
 from profile import profile_bp
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(profile_bp)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
