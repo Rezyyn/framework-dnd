@@ -11,13 +11,22 @@
         <nav>
             <ul>
                 <li><a href="{{ url_for('index') }}">Home</a></li>
-                <li><a href="{{ url_for('create_room') }}" onclick="event.preventDefault(); this.closest('form').submit();">Create Room</a></li>
-                <li><a href="{{ url_for('profile.profile') }}">Profile</a></li>
-                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-                <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-                <li><a href="{{ url_for('auth.admin') }}">Admin</a></li>
+                {% if current_user.is_authenticated %}
+                    <li>
+                        <form action="{{ url_for('create_room') }}" method="POST" style="display: inline;">
+                            <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">Create Room</button>
+                        </form>
+                    </li>
+                    <li><a href="{{ url_for('profile.profile') }}">Profile</a></li>
+                    {% if current_user.has_role('Admin') %}
+                        <li><a href="{{ url_for('auth.admin') }}">Admin</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                {% endif %}
             </ul>
-            <form action="{{ url_for('create_room') }}" method="POST" style="display: none;"></form>
         </nav>
         {% block content %}{% endblock %}
     </div>

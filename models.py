@@ -22,6 +22,9 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def has_role(self, role_name):
+        return role_name in [role.name for role in self.roles]
+
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), unique=True, nullable=False)
@@ -30,3 +33,8 @@ class Role(db.Model):
     def __init__(self, name, permissions):
         self.name = name
         self.permissions = permissions
+
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(256), nullable=False)
+    answer = db.Column(db.String(256), nullable=False)
