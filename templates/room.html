@@ -1,70 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trivia Game Room</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li>
-                    <form action="/create_room" method="POST" style="display: inline;">
-                        <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">Create Room</button>
-                    </form>
-                </li>
-                <li><a href="/profile">Profile</a></li>
-                <li><a href="/auth/login">Login</a></li>
-                <li><a href="/auth/register">Register</a></li>
-                <li><a href="/auth/admin">Admin</a></li>
-            </ul>
-        </nav>
-        
-        <h1>Room: {{ room_id }}</h1>
-        <div id="players" class="players"></div>
-        <div id="question" class="question"></div>
-        <input type="text" id="answer" placeholder="Your answer" class="answer-input">
-        <button onclick="submitAnswer()" class="submit-button">Submit Answer</button>
-        <div id="scores" class="scores"></div>
+<!-- templates/room.html -->
+<script>
+    const socket = io();
+    const room = "{{ room_id }}";
+    
+    // Get the username from the profile page
+    const usernameInput = document.querySelector('#name');
+    const username = usernameInput ? usernameInput.value : null;
 
-        <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-        <script>
-            const socket = io();
-            const room = "{{ room_id }}";
-            const username = prompt("Enter your username");
+    if (username) {
+        socket.emit('join', { room, username });
 
-            socket.emit('join', { room, username });
+        socket.on('player_joined', (data) => {
+            const playersDiv = document.getElementById('players');
+            playersDiv.innerHTML += `<p>${data.username} joined the room.</p>`;
+        });
 
-            socket.on('player_joined', (data) => {
-                const playersDiv = document.getElementById('players');
-                playersDiv.innerHTML += `<p>${data.username} joined the room.</p>`;
-            });
+        socket.on('new_question', (data) => {
+            document.getElementById('question').innerText = data.question;
+        });
 
-            socket.on('new_question', (data) => {
-                document.getElementById('question').innerText = data.question;
-            });
-
-            socket.on('update_scores', (scores) => {
-                const scoresDiv = document.getElementById('scores');
-                scoresDiv.innerHTML = '';
-                for (const [player, score] of Object.entries(scores)) {
-                    scoresDiv.innerHTML += `<p>${player}: ${score}</p>`;
-                }
-            });
-
-            socket.on('game_over', () => {
-                alert('Game over!');
-            });
-
-            function submitAnswer() {
-                const answer = document.getElementById('answer').value;
-                socket.emit('answer', { room, username, answer });
-                document.getElementById('answer').value = '';
+        socket.on('update_scores', (scores) => {
+            const scoresDiv = document.getElementById('scores');
+            scoresDiv.innerHTML = '';
+            for (const [player, score] of Object.entries(scores)) {
+                scoresDiv.innerHTML += `<p>${player}: ${score}</p>`;
             }
-        </script>
-    </div>
-</body>
-</html>
+        });
+
+        socket.on('game_over', () => {
+            alert('Game over!');
+        });
+
+        function submitAnswer() {
+            const answer = document.getElementById('answer').value;
+            socket.emit('answer', { room, username, answer });
+            document.getElementById('answer').value = '';
+        }
+    } else {
+        console.error('Username input field not found or empty.');
+    }
+</script>
