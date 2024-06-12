@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('trivia.db')
+conn = sqlite3.connect('dnd.db')
 c = conn.cursor()
 
 # Create table

@@ -11,7 +11,7 @@ import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trivia.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dnd.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
