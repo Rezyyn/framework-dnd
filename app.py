@@ -1,4 +1,7 @@
-# app.py
+import re
+from random import randint
+
+# Existing imports...
 from flask import Flask, render_template, redirect, url_for, request
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from flask_login import LoginManager, current_user, login_required
@@ -86,12 +89,31 @@ def handle_answer(data):
     else:
         emit('game_over', room=room)
 
+def parse_dice_roll(command):
+    match = re.match(r'/roll (\d+)d(\d+)', command)
+    if match:
+        num_dice = int(match.group(1))
+        dice_sides = int(match.group(2))
+        rolls = [randint(1, dice_sides) for _ in range(num_dice)]
+        total = sum(rolls)
+        return rolls, total
+    return None, None
+
 @socketio.on('send_message')
 @login_required
 def handle_send_message(data):
     room = data['room']
     username = data['username']
     message = data['message']
+
+    if message.startswith('/roll'):
+        rolls, total = parse_dice_roll(message)
+        if rolls is not None:
+            result_message = f"{username} rolled {message}: {rolls} (Total: {total})"
+            rooms[room]['messages'].append({'username': username, 'message': result_message})
+            emit('receive_message', {'username': username, 'message': result_message}, room=room)
+            return
+
     rooms[room]['messages'].append({'username': username, 'message': message})
     emit('receive_message', {'username': username, 'message': message}, room=room)
 

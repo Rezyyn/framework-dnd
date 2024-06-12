@@ -26,26 +26,44 @@
                 <img src="{{ url_for('static', filename='profile_pics/' ~ current_user.profile_picture) }}" alt="Profile Picture">
                 <span>{{ current_user.username }}</span>
             </li>
+            <li class="room-info">
+                <span>Room: {{ room_id }}</span>
+            </li>
         </ul>
     </nav>
     
     <div class="main-content container fantasy-theme">
         <div class="game-content">
-            <h1>Room: {{ room_id }}</h1>
             <div id="players" class="players"></div>
             <div id="question" class="question"></div>
             <input type="text" id="answer" placeholder="Your answer" class="answer-input">
             <button onclick="submitAnswer()" class="submit-button">Submit Answer</button>
-            <div id="scores" class="scores"></div>
         </div>
     </div>
 
     <div class="chat-content">
         <div id="chatBox"></div>
         <form id="chatForm">
-            <input type="text" id="chatMessage" placeholder="Type a message...">
+            <input type="text" id="chatMessage" placeholder="Type a message or /roll [number]d[sides]...">
             <button id="sendButton" type="submit">Send</button>
+            <button type="button" onclick="showDiceRoller()">Roll Dice</button>
         </form>
+    </div>
+
+    <div class="scores" id="scores">
+        <!-- Scores will be dynamically populated here -->
+    </div>
+
+    <!-- Dice Roller Modal -->
+    <div id="diceRollerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDiceRoller()">&times;</span>
+            <label for="numDice">Number of Dice:</label>
+            <input type="number" id="numDice" min="1" value="1">
+            <label for="diceSides">Sides per Die:</label>
+            <input type="number" id="diceSides" min="2" value="6">
+            <button onclick="rollDice()">Roll</button>
+        </div>
     </div>
 
     <!-- Embedding the username in a script tag -->
@@ -61,8 +79,8 @@
         socket.emit('join', { room, username });
 
         socket.on('player_joined', (data) => {
-            const playersDiv = document.getElementById('players');
-            playersDiv.innerHTML += `<p>${data.username} joined the room.</p>`;
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += `<p>${data.username} joined the room.</p>`;
         });
 
         socket.on('new_question', (data) => {
@@ -73,7 +91,14 @@
             const scoresDiv = document.getElementById('scores');
             scoresDiv.innerHTML = '';
             for (const [player, score] of Object.entries(scores)) {
-                scoresDiv.innerHTML += `<p>${player}: ${score}</p>`;
+                const profilePic = `/static/profile_pics/${player.profile_picture}`;
+                scoresDiv.innerHTML += `
+                    <div class="score-entry">
+                        <img src="${profilePic}" alt="Profile Picture" class="profile-pic">
+                        <span class="player-name">${player}</span>
+                        <span class="player-score">${score}</span>
+                    </div>
+                `;
             }
         });
 
@@ -100,6 +125,45 @@
             messageElement.textContent = `${data.username}: ${data.message}`;
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        function showDiceRoller() {
+            document.getElementById('diceRollerModal').style.display = 'block';
+        }
+
+        function closeDiceRoller() {
+            document.getElementById('diceRollerModal').style.display = 'none';
+        }
+
+        function rollDice() {
+            const numDice = document.getElementById('numDice').value;
+            const diceSides = document.getElementById('diceSides').value;
+            const rollCommand = `/roll ${numDice}d${diceSides}`;
+            socket.emit('send_message', { room: room, username: username, message: rollCommand });
+            closeDiceRoller();
+        }
+
+        // Make the modal draggable
+        const modal = document.getElementById('diceRollerModal');
+        const modalContent = document.querySelector('.modal-content');
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        modalContent.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - modalContent.getBoundingClientRect().left;
+            offsetY = e.clientY - modalContent.getBoundingClientRect().top;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                modalContent.style.left = `${e.clientX - offsetX}px`;
+                modalContent.style.top = `${e.clientY - offsetY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
         });
     </script>
 </body>
