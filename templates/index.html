@@ -4,22 +4,26 @@
 
 {% block content %}
 <div class="main-content">
+    <div>
     <h1>Welcome to the Trivia Game!</h1>
+    </div>
     {% if current_user.is_authenticated %}
-        <h2>Active Games</h2>
-        <ul class="active-games">
-            {% for room_id, room in active_rooms.items() %}
-            <li>
-                <div class="game">
-                    <div class="game-details">
-                        <h3>Room {{ room_id }}</h3>
-                        <p>Players: {{ room.players|length }}</p>
+        <div class="active-games-section">
+            <h2>Active Games</h2>
+            <ul class="active-games">
+                {% for room_id, room in active_rooms.items() %}
+                <li>
+                    <div class="game">
+                        <div class="game-details">
+                            <h3>Room {{ room_id }}</h3>
+                            <p>Players: {{ room.players|length }}</p>
+                        </div>
+                        <a href="{{ url_for('room', room_id=room_id) }}" class="join-button">Join Game</a>
                     </div>
-                    <a href="{{ url_for('room', room_id=room_id) }}" class="join-button">Join Game</a>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     {% else %}
         <p>Welcome to our platform for online tabletop adventures! Join exciting games, meet new friends, and dive into a world of fun and adventure. Sign up now to start your journey!</p>
     {% endif %}

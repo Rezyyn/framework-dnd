@@ -3,6 +3,7 @@
 {% block title %}List of Trivia Questions{% endblock %}
 
 {% block content %}
+<div class="main-content">
     <h1>List of Trivia Questions</h1>
     <table>
         <thead>
@@ -20,7 +21,7 @@
                 <td>{{ question.question }}</td>
                 <td>{{ question.answer }}</td>
                 <td>
-                    <form action="{{ url_for('delete_question', question_id=question.id) }}" method="post">
+                    <form action="{{ url_for('auth.delete_question', question_id=question.id) }}" method="POST">
                         <button type="submit">Delete</button>
                     </form>
                 </td>
@@ -28,4 +29,5 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
 {% endblock %}

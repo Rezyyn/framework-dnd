@@ -20,7 +20,7 @@ body {
 .container {
     width: 90%;
     max-width: 1200px;
-    margin: 20px auto;
+    margin: 120px auto;
     padding: 20px;
     background-color: rgba(255, 255, 255, 0.85);
     border-radius: 12px;
@@ -82,10 +82,12 @@ nav ul .user-info img {
 
 .main-content {
     display: flex;
-    justify-content: space-between;
-    margin-top: 70px; /* Add margin to push content below fixed nav */
+    justify-content: space-around;
+    margin-top: 70px;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
 }
-
 .game-content {
     flex: 2;
     min-width: 300px;

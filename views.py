@@ -82,3 +82,26 @@ def delete_question(question_id):
     db.session.commit()
     flash('Question deleted successfully!', 'success')
     return redirect(url_for('auth.list_questions'))
+
+@auth_bp.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('Admin')
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if request.method == 'POST':
+        user.username = request.form['username']
+        user.email = request.form['email']
+        db.session.commit()
+        flash('User updated successfully!', 'success')
+        return redirect(url_for('auth.user_management'))
+    return render_template('edit_user.html', user=user)
+
+@auth_bp.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully!', 'success')
+    return redirect(url_for('auth.user_management'))

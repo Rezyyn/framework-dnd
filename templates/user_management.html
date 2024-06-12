@@ -5,20 +5,13 @@
 {% block content %}
 <div class="main-content user-management">
     <h1>User Management</h1>
-    <div class="admin-navigation">
-        <ul>
-            <li><a href="{{ url_for('auth.admin') }}">Admin Home</a></li>
-            <li><a href="{{ url_for('auth.add_question') }}">Add Question</a></li>
-            <li><a href="{{ url_for('auth.list_questions') }}">List Questions</a></li>
-        </ul>
-    </div>
     <div class="user-table">
         <table id="userTable">
             <thead>
                 <tr>
-                    <th onclick="sortTable(0)">Username</th>
-                    <th onclick="sortTable(1)">Email</th>
-                    <th onclick="sortTable(2)">Roles</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Roles</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -29,8 +22,10 @@
                     <td>{{ user.email }}</td>
                     <td>{{ user.roles|join(', ') }}</td>
                     <td>
-                        <a href="{{ url_for('auth.edit_user', user_id=user.id) }}">Edit</a> | 
-                        <a href="{{ url_for('auth.delete_user', user_id=user.id) }}">Delete</a>
+                        <a href="{{ url_for('auth.edit_user', user_id=user.id) }}">Edit</a> |
+                        <form action="{{ url_for('auth.delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                            <button type="submit">Delete</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
@@ -38,45 +33,4 @@
         </table>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-function sortTable(n) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-    table = document.getElementById("userTable");
-    switching = true;
-    dir = "asc"; 
-    while (switching) {
-        switching = false;
-        rows = table.rows;
-        for (i = 1; i < (rows.length - 1); i++) {
-            shouldSwitch = false;
-            x = rows[i].getElementsByTagName("TD")[n];
-            y = rows[i + 1].getElementsByTagName("TD")[n];
-            if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-        }
-        if (shouldSwitch) {
-            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-            switching = true;
-            switchcount ++;      
-        } else {
-            if (switchcount == 0 && dir == "asc") {
-                dir = "desc";
-                switching = true;
-            }
-        }
-    }
-}
-</script>
 {% endblock %}
