@@ -1,7 +1,7 @@
 import os
 
 # Directory path of the repository
-repo_path = 'C:\\Users\\James\\Documents\\vscode_projects\\framework-dnd'
+repo_path = 'C:\\Users\\\\Documents\\vscode_projects\\framework-dnd'
 # List of files to read
 files_to_read = [
     'README.md',
@@ -32,7 +32,7 @@ for file_name in files_to_read:
                 file_contents[file_name] = file.read()
 
 # Write the contents to a new file for easier reading
-output_file_path = 'C:\\Users\\James\\Documents\\vscode_projects\\framework-dnd\\framework_dnd_files_contents.txt'
+output_file_path = 'C:\\Users\\\\Documents\\vscode_projects\\framework-dnd\\framework_dnd_files_contents.txt'
 with open(output_file_path, 'w', encoding='utf-8') as output_file:
     for file_name, content in file_contents.items():
         output_file.write(f'=== {file_name} ===\n')
