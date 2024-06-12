@@ -1,3 +1,4 @@
+/* Base Styles */
 body {
     font-family: 'Cinzel', serif;
     background-image: url('/static/pictures/fantasy_background.webp');
@@ -80,18 +81,42 @@ nav ul .user-info img {
     height: 40px;
 }
 
+nav ul .room-info {
+    display: flex;
+    align-items: center;
+    font-family: 'Cinzel', serif;
+    color: #007bff;
+    margin-left: auto;
+}
+
 .main-content {
     display: flex;
-    justify-content: space-around;
-    margin-top: 70px;
     flex-direction: column;
-    flex-wrap: wrap;
+    height: calc(100vh - 60px); /* Adjusting for the navbar height */
     align-items: center;
 }
-.game-content {
-    flex: 2;
-    min-width: 300px;
-    padding-right: 20px;
+
+.map-placeholder {
+    flex-grow: 1;
+    background-color: #eee; /* Placeholder color */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin: 20px;
+}
+
+.bottom-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.question-content {
+    width: 100%;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    margin-bottom: 20px; /* Added margin to sit above scores */
 }
 
 .chat-content {
@@ -105,7 +130,6 @@ nav ul .user-info img {
     background-color: rgba(255, 255, 255, 0.85);
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
     padding-bottom: 3.5%;
-
 }
 
 button {
@@ -115,7 +139,6 @@ button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
- /*   background-image: url('/static/pictures/button.webp'); */
     background-size: cover;
     background-position: center;
 }
@@ -184,7 +207,6 @@ input[type="text"], input[type="password"] {
     border-radius: 8px;
     cursor: pointer;
     text-decoration: none;
- /*   background-image: url('/static/pictures/button.webp'); */
     background-size: cover;
     background-position: center;
 }
@@ -211,14 +233,6 @@ input[type="text"], input[type="password"] {
 
 #sendButton {
     width: 18%;
-}
-
-/* Divider Styles */
-.horizontal-divider {
-    background-image: url('/static/pictures/horizontal_divider.webp');
-    height: 10px;
-    background-size: cover;
-    margin: 20px 0;
 }
 
 /* Admin Navigation Styles */
@@ -280,28 +294,13 @@ input[type="text"], input[type="password"] {
     background-color: #f9f9f9;
 }
 
-.diceRollerModal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
 .scores {
-    position: fixed;
-    bottom: 0;
     width: 100%;
     background-color: rgba(255, 255, 255, 0.85);
     padding: 10px;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
     display: flex;
-    justify-content: left;
+    justify-content: center;
     align-items: center;
     flex-wrap: wrap;
 }
@@ -327,6 +326,7 @@ input[type="text"], input[type="password"] {
 .player-score {
     color: #007bff;
 }
+
 .modal {
     display: none;
     position: fixed;
@@ -352,12 +352,4 @@ input[type="text"], input[type="password"] {
     right: 10px;
     font-size: 20px;
     cursor: pointer;
-}
-
-nav ul .room-info {
-    display: flex;
-    align-items: center;
-    font-family: 'Cinzel', serif;
-    color: #007bff;
-    margin-left: auto;
 }

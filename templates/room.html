@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dnd Game Room</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css" id="theme-link">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
@@ -22,22 +22,31 @@
             <li><a href="/auth/login"><span class="material-icons">login</span> Login</a></li>
             <li><a href="/auth/register"><span class="material-icons">app_registration</span> Register</a></li>
             <li><a href="/auth/admin"><span class="material-icons">admin_panel_settings</span> Admin</a></li>
+            <li><span>Room: {{ room_id }}</span></li>
             <li class="user-info">
                 <img src="{{ url_for('static', filename='profile_pics/' ~ current_user.profile_picture) }}" alt="Profile Picture">
                 <span>{{ current_user.username }}</span>
             </li>
-            <li class="room-info">
-                <span>Room: {{ room_id }}</span>
+            <li>
+                <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
             </li>
         </ul>
     </nav>
     
     <div class="main-content container fantasy-theme">
-        <div class="game-content">
-            <div id="players" class="players"></div>
-            <div id="question" class="question"></div>
-            <input type="text" id="answer" placeholder="Your answer" class="answer-input">
-            <button onclick="submitAnswer()" class="submit-button">Submit Answer</button>
+        <div class="map-placeholder">
+            <!-- Placeholder for future GeoJSON map -->
+        </div>
+        <div class="bottom-content">
+            <div class="question-content">
+                <div id="players" class="players"></div>
+                <div id="question" class="question"></div>
+                <input type="text" id="answer" placeholder="Your answer" class="answer-input">
+                <button onclick="submitAnswer()" class="submit-button">Submit Answer</button>
+            </div>
+            <div class="scores" id="scores">
+                <!-- Scores will be dynamically populated here -->
+            </div>
         </div>
     </div>
 
@@ -48,10 +57,6 @@
             <button id="sendButton" type="submit">Send</button>
             <button type="button" onclick="showDiceRoller()">Roll Dice</button>
         </form>
-    </div>
-
-    <div class="scores" id="scores">
-        <!-- Scores will be dynamically populated here -->
     </div>
 
     <!-- Dice Roller Modal -->
@@ -165,6 +170,15 @@
         document.addEventListener('mouseup', () => {
             isDragging = false;
         });
+
+        function toggleDarkMode() {
+            const themeLink = document.getElementById('theme-link');
+            if (themeLink.getAttribute('href') === '/static/style.css') {
+                themeLink.setAttribute('href', '/static/dark-mode.css');
+            } else {
+                themeLink.setAttribute('href', '/static/style.css');
+            }
+        }
     </script>
 </body>
 </html>

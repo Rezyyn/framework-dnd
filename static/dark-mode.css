@@ -1,0 +1,225 @@
+/* Dark Mode Styles */
+body {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: 'Cinzel', serif;
+}
+
+.fantasy-theme {
+    font-family: 'Cinzel', serif;
+}
+
+.futuristic-theme {
+    font-family: 'Orbitron', sans-serif;
+}
+
+.container, .chat-content, .admin-navigation, .scores, .question-content {
+    background-color: rgba(33, 33, 33, 0.85);
+    color: #ffffff;
+}
+
+nav {
+    background-color: rgba(33, 33, 33, 0.85);
+}
+
+nav ul li a, nav ul li span, .player-score, .room-info, button {
+    color: #bb86fc;
+}
+
+button {
+    background-color: #bb86fc;
+    color: #121212;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #3700b3;
+}
+
+a {
+    color: #bb86fc;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="password"] {
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #555555;
+    padding: 10px;
+    width: calc(100% - 22px);
+    border-radius: 4px;
+}
+
+.game {
+    display: flex;
+    align-items: center;
+    background-color: #424242;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+    text-align: left;
+}
+
+.game-image {
+    width: 80px;
+    height: 80px;
+    margin-right: 20px;
+    background-size: cover;
+    border-radius: 50%;
+}
+
+.game-details {
+    flex-grow: 1;
+}
+
+.join-button {
+    padding: 10px 15px;
+    background-color: #03dac6;
+    color: #121212;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.join-button:hover {
+    background-color: #018786;
+}
+
+#chatBox {
+    border: 1px solid #555555;
+    background-color: rgba(33, 33, 33, 0.7);
+    height: calc(100% - 70px);
+    overflow-y: auto;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    padding-bottom: 50px;
+}
+
+#chatMessage {
+    width: 80%;
+}
+
+#sendButton {
+    width: 18%;
+}
+
+.admin-navigation ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.admin-navigation ul li {
+    margin-bottom: 10px;
+}
+
+.admin-navigation ul li a {
+    text-decoration: none;
+    color: #bb86fc;
+}
+
+.admin-navigation ul li a:hover {
+    text-decoration: underline;
+}
+
+.admin-panel {
+    margin-left: 220px;
+    padding: 20px;
+}
+
+.user-table {
+    overflow-x: auto;
+}
+
+.user-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-table th, .user-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #555555;
+}
+
+.user-table th:hover {
+    background-color: #424242;
+}
+
+.user-table tr:hover {
+    background-color: #333333;
+}
+
+.scores {
+    width: 100%;
+    padding: 10px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.score-entry {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+.profile-pic {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.player-name {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #333333;
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+    cursor: move;
+}
+
+.close {
+    color: #bb86fc;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+}
