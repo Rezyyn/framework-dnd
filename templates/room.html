@@ -1,13 +1,63 @@
-<!-- templates/room.html -->
-<script>
-    const socket = io();
-    const room = "{{ room_id }}";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Game Room</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/"><span class="material-icons">home</span> Home</a></li>
+            <li>
+                <form action="/create_room" method="POST" style="display: inline;">
+                    <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+                        <span class="material-icons">add_circle_outline</span> Create Room
+                    </button>
+                </form>
+            </li>
+            <li><a href="/profile"><span class="material-icons">person</span> Profile</a></li>
+            <li><a href="/auth/login"><span class="material-icons">login</span> Login</a></li>
+            <li><a href="/auth/register"><span class="material-icons">app_registration</span> Register</a></li>
+            <li><a href="/auth/admin"><span class="material-icons">admin_panel_settings</span> Admin</a></li>
+            <li class="user-info">
+                <img src="{{ url_for('static', filename='profile_pics/' ~ current_user.profile_picture) }}" alt="Profile Picture">
+                <span>{{ current_user.username }}</span>
+            </li>
+        </ul>
+    </nav>
     
-    // Get the username from the profile page
-    const usernameInput = document.querySelector('#name');
-    const username = usernameInput ? usernameInput.value : null;
+    <div class="main-content container fantasy-theme">
+        <div class="game-content">
+            <h1>Room: {{ room_id }}</h1>
+            <div id="players" class="players"></div>
+            <div id="question" class="question"></div>
+            <input type="text" id="answer" placeholder="Your answer" class="answer-input">
+            <button onclick="submitAnswer()" class="submit-button">Submit Answer</button>
+            <div id="scores" class="scores"></div>
+        </div>
+    </div>
 
-    if (username) {
+    <div class="chat-content">
+        <div id="chatBox"></div>
+        <form id="chatForm">
+            <input type="text" id="chatMessage" placeholder="Type a message...">
+            <button id="sendButton" type="submit">Send</button>
+        </form>
+    </div>
+
+    <!-- Embedding the username in a script tag -->
+    <script>
+        const username = "{{ current_user.username }}";
+    </script>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const room = "{{ room_id }}";
+
         socket.emit('join', { room, username });
 
         socket.on('player_joined', (data) => {
@@ -36,7 +86,21 @@
             socket.emit('answer', { room, username, answer });
             document.getElementById('answer').value = '';
         }
-    } else {
-        console.error('Username input field not found or empty.');
-    }
-</script>
+
+        document.getElementById('chatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = document.getElementById('chatMessage').value;
+            socket.emit('send_message', { room: room, username: username, message: message });
+            document.getElementById('chatMessage').value = '';
+        });
+
+        socket.on('receive_message', (data) => {
+            const chatBox = document.getElementById('chatBox');
+            const messageElement = document.createElement('p');
+            messageElement.textContent = `${data.username}: ${data.message}`;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>

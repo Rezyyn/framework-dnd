@@ -5,30 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Trivia Game{% endblock %}</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Orbitron&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
-                {% if current_user.is_authenticated %}
-                    <li>
-                        <form action="{{ url_for('create_room') }}" method="POST" style="display: inline;">
-                            <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">Create Room</button>
-                        </form>
-                    </li>
-                    <li><a href="{{ url_for('profile.profile') }}">Profile</a></li>
-                    {% if current_user.has_role('Admin') %}
-                        <li><a href="{{ url_for('auth.admin') }}">Admin</a></li>
-                    {% endif %}
-                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-                    <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}"><span class="material-icons">home</span> Home</a></li>
+            {% if current_user.is_authenticated %}
+                <li>
+                    <form action="{{ url_for('create_room') }}" method="POST" style="display: inline;">
+                        <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+                            <span class="material-icons">add_circle_outline</span> Create Room
+                        </button>
+                    </form>
+                </li>
+                <li><a href="{{ url_for('profile.profile') }}"><span class="material-icons">person</span> Profile</a></li>
+                {% if current_user.has_role('Admin') %}
+                    <li><a href="{{ url_for('auth.admin') }}"><span class="material-icons">admin_panel_settings</span> Admin</a></li>
                 {% endif %}
-            </ul>
-        </nav>
+                <li><a href="{{ url_for('auth.logout') }}"><span class="material-icons">logout</span> Logout</a></li>
+                <li class="user-info">
+                    <img src="{{ url_for('static', filename='profile_pics/' ~ current_user.profile_picture) }}" alt="Profile Picture">
+                    <span>{{ current_user.username }}</span>
+                </li>
+            {% else %}
+                <li><a href="{{ url_for('auth.login') }}"><span class="material-icons">login</span> Login</a></li>
+                <li><a href="{{ url_for('auth.register') }}"><span class="material-icons">app_registration</span> Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <div class="container fantasy-theme">
         {% block content %}{% endblock %}
+        <div class="horizontal-divider"></div>
     </div>
     {% block scripts %}{% endblock %}
 </body>

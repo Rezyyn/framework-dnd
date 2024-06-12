@@ -1,6 +1,7 @@
-from flask import Flask, render_template, redirect, url_for
+# app.py
+from flask import Flask, render_template, redirect, url_for, request
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
-from flask_login import LoginManager, current_user
+from flask_login import LoginManager, current_user, login_required
 from db import db
 from models import User, Question
 import random
@@ -35,22 +36,26 @@ rooms = {}
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    active_rooms = rooms
+    return render_template('index.html', active_rooms=active_rooms)
 
 @app.route('/create_room', methods=['POST'])
+@login_required
 def create_room():
     room_id = str(random.randint(1000, 9999))
     questions = Question.query.all()
-    rooms[room_id] = {'players': [], 'questions': questions, 'scores': {}}
+    rooms[room_id] = {'players': [], 'questions': questions, 'scores': {}, 'messages': []}
     return redirect(url_for('room', room_id=room_id))
 
 @app.route('/room/<room_id>')
+@login_required
 def room(room_id):
     if room_id not in rooms:
         return "Room not found!", 404
     return render_template('room.html', room_id=room_id)
 
 @socketio.on('join')
+@login_required
 def handle_join(data):
     room = data['room']
     username = data['username']
@@ -58,31 +63,37 @@ def handle_join(data):
     rooms[room]['players'].append(username)
     rooms[room]['scores'][username] = 0
     emit('player_joined', {'username': username}, room=room)
-    # Optionally send the current players and scores to the new user
     emit('update_scores', rooms[room]['scores'], room=room)
-    # Send the first question to the room
     if rooms[room]['questions']:
-        question = rooms[room]['questions'].pop(0)
+        question = rooms[room]['questions'][0]
         emit('new_question', {'question': question.question}, room=room)
 
 @socketio.on('answer')
+@login_required
 def handle_answer(data):
     room = data['room']
     username = data['username']
     answer = data['answer']
-    # Check answer logic here
     if rooms[room]['questions']:
         correct_answer = rooms[room]['questions'][0].answer
         if answer.lower() == correct_answer.lower():
             rooms[room]['scores'][username] += 1
         rooms[room]['questions'].pop(0)
     emit('update_scores', rooms[room]['scores'], room=room)
-    # Send the next question if available
     if rooms[room]['questions']:
-        question = rooms[room]['questions'].pop(0)
+        question = rooms[room]['questions'][0]
         emit('new_question', {'question': question.question}, room=room)
     else:
         emit('game_over', room=room)
+
+@socketio.on('send_message')
+@login_required
+def handle_send_message(data):
+    room = data['room']
+    username = data['username']
+    message = data['message']
+    rooms[room]['messages'].append({'username': username, 'message': message})
+    emit('receive_message', {'username': username, 'message': message}, room=room)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
