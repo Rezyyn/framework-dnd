@@ -33,7 +33,11 @@
         </ul>
     </nav>
     
-    <div class="main-content container fantasy-theme">
+    <div class="main-content container fantasy-theme" style =
+    margin-top: 6%;
+    margin-right: 30%;
+    margin-bottom: 6%;
+    border-left-width: 0px;"'>
         <div class="map-placeholder">
             <!-- Placeholder for future GeoJSON map -->
         </div>
@@ -43,9 +47,6 @@
                 <div id="question" class="question"></div>
                 <input type="text" id="answer" placeholder="Your answer" class="answer-input">
                 <button onclick="submitAnswer()" class="submit-button">Submit Answer</button>
-            </div>
-            <div class="scores" id="scores">
-                <!-- Scores will be dynamically populated here -->
             </div>
         </div>
     </div>
@@ -57,6 +58,10 @@
             <button id="sendButton" type="submit">Send</button>
             <button type="button" onclick="showDiceRoller()">Roll Dice</button>
         </form>
+    </div>
+
+    <div class="scores" id="scores">
+        <!-- Scores will be dynamically populated here -->
     </div>
 
     <!-- Dice Roller Modal -->
