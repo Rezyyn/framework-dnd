@@ -1,3 +1,4 @@
+<!-- admin.html -->
 {% extends "base.html" %}
 
 {% block title %}Admin{% endblock %}
@@ -7,76 +8,31 @@
     <h1>User Management</h1>
     <div class="admin-navigation">
         <ul>
-            <li><a href="{{ url_for('auth.user_management') }}">User Management</a></li>
-            <li><a href="{{ url_for('auth.add_question') }}">Add Question</a></li>
-            <li><a href="{{ url_for('auth.list_questions') }}">List Questions</a></li>
-            
+            <li><a href="{{ url_for('admin.user_management') }}">User Management</a></li>
+            <li><a href="{{ url_for('admin.add_question') }}">Add Question</a></li>
+            <li><a href="{{ url_for('admin.list_questions') }}">List Questions</a></li>
         </ul>
     </div>
-    <div class="user-table">
-        <table id="userTable">
-            <thead>
-                <tr>
-                    <th onclick="sortTable(0)">Username</th>
-                    <th onclick="sortTable(1)">Email</th>
-                    <th onclick="sortTable(2)">Roles</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.roles|join(', ') }}</td>
-                    <td>
-                        <a href="#">Edit</a> | <a href="#">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="geojson-management">
+        <h2>Manage GeoJSON Layers</h2>
+        <form action="{{ url_for('admin.upload_geojson') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" name="geojson_file" required>
+            <button type="submit">Upload GeoJSON</button>
+        </form>
+        <h3>Available Layers</h3>
+        <ul>
+            {% for layer in geojson_layers %}
+            <li>
+                {{ layer.name }} - 
+                <form action="{{ url_for('admin.toggle_layer', layer_id=layer.id) }}" method="POST" style="display:inline;">
+                    <button type="submit">{{ 'Deactivate' if layer.active else 'Activate' }}</button>
+                </form>
+                <form action="{{ url_for('admin.delete_layer', layer_id=layer.id) }}" method="POST" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-function sortTable(n) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-    table = document.getElementById("userTable");
-    switching = true;
-    dir = "asc"; 
-    while (switching) {
-        switching = false;
-        rows = table.rows;
-        for (i = 1; i < (rows.length - 1); i++) {
-            shouldSwitch = false;
-            x = rows[i].getElementsByTagName("TD")[n];
-            y = rows[i + 1].getElementsByTagName("TD")[n];
-            if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    shouldSwitch= true;
-                    break;
-                }
-            } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-        }
-        if (shouldSwitch) {
-            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-            switching = true;
-            switchcount ++;      
-        } else {
-            if (switchcount == 0 && dir == "asc") {
-                dir = "desc";
-                switching = true;
-            }
-        }
-    }
-}
-</script>
 {% endblock %}

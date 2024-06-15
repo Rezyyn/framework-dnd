@@ -1,12 +1,15 @@
-# init_db.py
-from app import app
-from models import db, User, Map, Layer, Tooltip, ClassSheet, Attribute
+from app import app, db
+from models import Role
 
 with app.app_context():
     db.create_all()
-    # Create an admin user if not exists
-    if not User.query.filter_by(username='admin').first():
-        admin = User(username='admin')
-        admin.set_password('admin')
-        db.session.add(admin)
-        db.session.commit()
+
+    if not Role.query.filter_by(name='Admin').first():
+        admin_role = Role(name='Admin', permissions='all')
+        db.session.add(admin_role)
+
+    if not Role.query.filter_by(name='User').first():
+        user_role = Role(name='User', permissions='view')
+        db.session.add(user_role)
+
+    db.session.commit()

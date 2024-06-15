@@ -38,3 +38,9 @@ class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question = db.Column(db.String(256), nullable=False)
     answer = db.Column(db.String(256), nullable=False)
+    
+class GeoJSONLayer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    data = db.Column(db.Text, nullable=False)
+    active = db.Column(db.Boolean, default=False)
