@@ -1,38 +1,66 @@
-<!-- admin.html -->
-{% extends "base.html" %}
-
-{% block title %}Admin{% endblock %}
-
-{% block content %}
-<div class="main-content admin-panel">
-    <h1>User Management</h1>
-    <div class="admin-navigation">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/static/style.css" id="theme-link">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <nav>
         <ul>
-            <li><a href="{{ url_for('admin.user_management') }}">User Management</a></li>
-            <li><a href="{{ url_for('admin.add_question') }}">Add Question</a></li>
+            <li><a href="/"><span class="material-icons">home</span> Home</a></li>
+            <li><a href="/auth/admin"><span class="material-icons">admin_panel_settings</span> Admin</a></li>
+            <li><a href="/auth/logout"><span class="material-icons">logout</span> Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content container fantasy-theme">
+        <h1>Admin Panel</h1>
+        <ul>
             <li><a href="{{ url_for('admin.list_questions') }}">List Questions</a></li>
+            <li><a href="{{ url_for('admin.add_question') }}">Add Question</a></li>
         </ul>
-    </div>
-    <div class="geojson-management">
-        <h2>Manage GeoJSON Layers</h2>
         <form action="{{ url_for('admin.upload_geojson') }}" method="POST" enctype="multipart/form-data">
-            <input type="file" name="geojson_file" required>
-            <button type="submit">Upload GeoJSON</button>
+            <label for="geojson_file">Upload GeoJSON File:</label>
+            <input type="file" id="geojson_file" name="geojson_file">
+            <button type="submit">Upload</button>
         </form>
-        <h3>Available Layers</h3>
-        <ul>
+        <h2>Manage Layers</h2>
+        {% for room in rooms %}
+        <h3>Room {{ room.id }}</h3>
+        <table>
+            <tr>
+                <th>Layer Name</th>
+                <th>Actions</th>
+            </tr>
             {% for layer in geojson_layers %}
-            <li>
-                {{ layer.name }} - 
-                <form action="{{ url_for('admin.toggle_layer', layer_id=layer.id) }}" method="POST" style="display:inline;">
-                    <button type="submit">{{ 'Deactivate' if layer.active else 'Activate' }}</button>
-                </form>
-                <form action="{{ url_for('admin.delete_layer', layer_id=layer.id) }}" method="POST" style="display:inline;">
-                    <button type="submit">Delete</button>
-                </form>
-            </li>
+            <tr>
+                <td>{{ layer.name }}</td>
+                <td>
+                    <form action="{{ url_for('admin.toggle_layer', layer_id=layer.id, room_id=room.id) }}" method="POST" style="display:inline;">
+                        <button type="submit">{{ "Deactivate" if layer in room.active_layers else "Activate" }}</button>
+                    </form>
+                    <form action="{{ url_for('admin.delete_layer', layer_id=layer.id) }}" method="POST" style="display:inline;">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
             {% endfor %}
-        </ul>
+        </table>
+        {% endfor %}
     </div>
-</div>
-{% endblock %}
+
+    <script>
+        function toggleDarkMode() {
+            const themeLink = document.getElementById('theme-link');
+            if (themeLink.getAttribute('href') === '/static/style.css') {
+                themeLink.setAttribute('href', '/static/dark-mode.css');
+            } else {
+                themeLink.setAttribute('href', '/static/style.css');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from db import db
-from models import User, Role, Question, GeoJSONLayer
+from models import User, Role, Question, GeoJSONLayer, Room
 from forms import LoginForm, RegistrationForm
 from decorators import role_required
 import json
@@ -49,7 +49,8 @@ def admin():
     users = User.query.all()
     roles = Role.query.all()
     geojson_layers = GeoJSONLayer.query.all()
-    return render_template('admin.html', title='Admin', users=users, roles=roles, geojson_layers=geojson_layers)
+    rooms = Room.query.all()
+    return render_template('admin.html', title='Admin', users=users, roles=roles, geojson_layers=geojson_layers, rooms=rooms)
 
 @admin_bp.route('/user_management')
 @login_required
@@ -57,6 +58,13 @@ def admin():
 def user_management():
     users = User.query.all()
     return render_template('user_management.html', users=users)
+
+@admin_bp.route('/list_questions')
+@login_required
+@role_required('Admin')
+def list_questions():
+    questions = Question.query.all()
+    return render_template('list_questions.html', questions=questions)
 
 @admin_bp.route('/add_question', methods=['GET', 'POST'])
 @login_required
@@ -72,6 +80,17 @@ def add_question():
         return redirect(url_for('admin.add_question'))
     return render_template('add_question.html')
 
+@admin_bp.route('/delete_question/<int:question_id>', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_question(question_id):
+    question = Question.query.get(question_id)
+    if question:
+        db.session.delete(question)
+        db.session.commit()
+        flash('Question deleted successfully!', 'success')
+    return redirect(url_for('admin.list_questions'))
+
 @admin_bp.route('/upload_geojson', methods=['POST'])
 @login_required
 @role_required('Admin')
@@ -85,15 +104,22 @@ def upload_geojson():
         flash('GeoJSON file uploaded successfully!', 'success')
     return redirect(url_for('admin.admin'))
 
-@admin_bp.route('/toggle_layer/<int:layer_id>', methods=['POST'])
+@admin_bp.route('/toggle_layer/<int:layer_id>/<int:room_id>', methods=['POST'])
 @login_required
 @role_required('Admin')
-def toggle_layer(layer_id):
+def toggle_layer(layer_id, room_id):
     layer = GeoJSONLayer.query.get(layer_id)
-    if layer:
-        layer.active = not layer.active
+    room = Room.query.get(room_id)
+    if layer and room:
+        if layer in room.active_layers:
+            room.active_layers.remove(layer)
+            action = 'deactivated'
+        else:
+            room.active_layers.append(layer)
+            action = 'activated'
         db.session.commit()
-        flash(f'Layer {"activated" if layer.active else "deactivated"} successfully!', 'success')
+        flash(f'Layer {action} successfully!', 'success')
+        socketio.emit('layer_update', {'room_id': room_id}, broadcast=True)
     return redirect(url_for('admin.admin'))
 
 @admin_bp.route('/delete_layer/<int:layer_id>', methods=['POST'])
@@ -107,9 +133,11 @@ def delete_layer(layer_id):
         flash('Layer deleted successfully!', 'success')
     return redirect(url_for('admin.admin'))
 
-@admin_bp.route('/get_geojson')
+@admin_bp.route('/get_geojson/<int:room_id>')
 @login_required
-def get_geojson():
-    active_layers = GeoJSONLayer.query.filter_by(active=True).all()
-    features = [json.loads(layer.data) for layer in active_layers]
-    return jsonify(features)
+def get_geojson(room_id):
+    room = Room.query.get(room_id)
+    if room:
+        features = [json.loads(layer.data) for layer in room.active_layers]
+        return jsonify({"type": "FeatureCollection", "features": [feature for layer in features for feature in layer["features"]]})
+    return jsonify({"type": "FeatureCollection", "features": []})

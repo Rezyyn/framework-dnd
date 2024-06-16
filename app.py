@@ -1,12 +1,10 @@
 import re
 from random import randint
-
-# Existing imports...
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from flask_login import LoginManager, current_user, login_required
 from db import db
-from models import User, Question
+from models import User, Question, Role, GeoJSONLayer, Room
 import random
 
 app = Flask(__name__)
@@ -49,6 +47,9 @@ def create_room():
     room_id = str(random.randint(1000, 9999))
     questions = Question.query.all()
     rooms[room_id] = {'players': [], 'questions': questions, 'scores': {}, 'messages': []}
+    room = Room(name=room_id)
+    db.session.add(room)
+    db.session.commit()
     return redirect(url_for('room', room_id=room_id))
 
 @app.route('/room/<room_id>')
@@ -128,4 +129,6 @@ def handle_layer_change():
     emit('layer_update', broadcast=True)
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     socketio.run(app, debug=True)

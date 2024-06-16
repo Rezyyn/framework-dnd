@@ -1,33 +1,26 @@
+<!-- list_questions.html -->
 {% extends "base.html" %}
 
-{% block title %}List of dnd Questions{% endblock %}
-
 {% block content %}
-<div class="main-content">
-    <h1>List of dnd Questions</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Question</th>
-                <th>Answer</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for question in questions %}
-            <tr>
-                <td>{{ question.id }}</td>
-                <td>{{ question.question }}</td>
-                <td>{{ question.answer }}</td>
-                <td>
-                    <form action="{{ url_for('auth.delete_question', question_id=question.id) }}" method="POST">
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<h1>List of Questions</h1>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Question</th>
+        <th>Answer</th>
+        <th>Actions</th>
+    </tr>
+    {% for question in questions %}
+    <tr>
+        <td>{{ question.id }}</td>
+        <td>{{ question.question }}</td>
+        <td>{{ question.answer }}</td>
+        <td>
+            <form action="{{ url_for('admin.delete_question', question_id=question.id) }}" method="POST" style="display:inline;">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}

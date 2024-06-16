@@ -6,6 +6,23 @@
     <title>dnd Game Room</title>
     <link rel="stylesheet" href="/static/style.css" id="theme-link">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        #chatBox {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        #message-form {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <nav>
@@ -24,7 +41,7 @@
             <li><a href="/auth/admin"><span class="material-icons">admin_panel_settings</span> Admin</a></li>
             <li><span>Room: {{ room_id }}</span></li>
             <li class="user-info">
-                <img src="{{ url_for('static', filename='profile_pics/' ~ current_user.profile_picture) }}" alt="Profile Picture">
+                <img src="{{ url_for('static', filename='profile_pics/' ~ current_user.profile_picture.replace("static","")) }}" alt="Profile Picture">
                 <span>{{ current_user.username }}</span>
             </li>
             <li>
@@ -34,9 +51,7 @@
     </nav>
 
     <div class="main-content container fantasy-theme">
-        <div class="map-placeholder">
-            <!-- Placeholder for future GeoJSON map -->
-        </div>
+        <div id="map" class="map-placeholder"></div>
         <div class="bottom-content">
             <div class="question-content">
                 <div id="players" class="players"></div>
@@ -79,107 +94,157 @@
 
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
-        const socket = io();
-        const room = "{{ room_id }}";
+        document.addEventListener('DOMContentLoaded', function () {
+            var map = L.map('map').setView([0, 0], 2);
 
-        socket.emit('join', { room, username });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
 
-        socket.on('player_joined', (data) => {
-            const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML += `<p>${data.username} joined the room.</p>`;
-        });
+            let geojsonLayers = {};
 
-        socket.on('new_question', (data) => {
-            document.getElementById('question').innerText = data.question;
-        });
+            function loadGeoJSONLayers() {
+                fetch(`/admin/get_geojson/${room}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        for (let layerName in geojsonLayers) {
+                            map.removeLayer(geojsonLayers[layerName]);
+                        }
+                        geojsonLayers = {};
+                        L.geoJSON(data, {
+                            onEachFeature: function (feature, layer) {
+                                if (feature.properties && feature.properties.name) {
+                                    geojsonLayers[feature.properties.name] = layer;
+                                    layer.addTo(map);
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error fetching GeoJSON data:', error));
+            }
 
-        socket.on('update_scores', (scores) => {
-            const scoresDiv = document.getElementById('scores');
-            scoresDiv.innerHTML = '';
-            for (const [player, score] of Object.entries(scores)) {
-                const profilePic = `/static/profile_pics/${player.profile_picture}`;
-                scoresDiv.innerHTML += `
-                    <div class="score-entry">
-                        <img src="${profilePic}" alt="Profile Picture" class="profile-pic">
-                        <span class="player-name">${player}</span>
-                        <span class="player-score">${score}</span>
-                    </div>
-                `;
+            loadGeoJSONLayers();
+
+            // WebSocket connection
+            const socket = io();
+            const room = "{{ room_id }}";
+
+            socket.emit('join', { room, username });
+
+            socket.on('player_joined', (data) => {
+                const chatBox = document.getElementById('chatBox');
+                chatBox.innerHTML += `<p>${data.username} joined the room.</p>`;
+            });
+
+            socket.on('new_question', (data) => {
+                document.getElementById('question').innerText = data.question;
+            });
+
+            socket.on('update_scores', (scores) => {
+                const scoresDiv = document.getElementById('scores');
+                scoresDiv.innerHTML = '';
+                for (const [player, score] of Object.entries(scores)) {
+                    const profilePic = `/static/profile_pics/${player.profile_picture}`;
+                    scoresDiv.innerHTML += `
+                        <div class="score-entry">
+                            <img src="${profilePic}" alt="Profile Picture" class="profile-pic">
+                            <span class="player-name">${player}</span>
+                            <span class="player-score">${score}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            socket.on('game_over', () => {
+                alert('Game over!');
+            });
+
+            function submitAnswer() {
+                const answer = document.getElementById('answer').value;
+                socket.emit('answer', { room, username, answer });
+                document.getElementById('answer').value = '';
+            }
+
+            document.getElementById('chatForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const message = document.getElementById('chatMessage').value;
+                socket.emit('send_message', { room: room, username: username, message: message });
+                document.getElementById('chatMessage').value = '';
+            });
+
+            socket.on('receive_message', (data) => {
+                const chatBox = document.getElementById('chatBox');
+                const messageElement = document.createElement('p');
+                messageElement.textContent = `${data.username}: ${data.message}`;
+                chatBox.appendChild(messageElement);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            socket.on('map_ping', function(data) {
+                var latlng = L.latLng(data.lat, data.lng);
+                L.marker(latlng).addTo(map).bindPopup('Pinged!').openPopup();
+            });
+
+            socket.on('layer_update', function(data) {
+                if (data.room_id == room) {
+                    loadGeoJSONLayers();
+                }
+            });
+
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                socket.emit('map_ping', { room: "{{ room_id }}", lat: lat, lng: lng });
+            });
+
+            function showDiceRoller() {
+                document.getElementById('diceRollerModal').style.display = 'block';
+            }
+
+            function closeDiceRoller() {
+                document.getElementById('diceRollerModal').style.display = 'none';
+            }
+
+            function rollDice() {
+                const numDice = document.getElementById('numDice').value;
+                const diceSides = document.getElementById('diceSides').value;
+                const rollCommand = `/roll ${numDice}d${diceSides}`;
+                socket.emit('send_message', { room: room, username: username, message: rollCommand });
+                closeDiceRoller();
+            }
+
+            // Make the modal draggable
+            const modal = document.getElementById('diceRollerModal');
+            const modalContent = document.querySelector('.modal-content');
+            let isDragging = false;
+            let offsetX, offsetY;
+
+            modalContent.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offsetX = e.clientX - modalContent.getBoundingClientRect().left;
+                offsetY = e.clientY - modalContent.getBoundingClientRect().top;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    modalContent.style.left = `${e.clientX - offsetX}px`;
+                    modalContent.style.top = `${e.clientY - offsetY}px`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            function toggleDarkMode() {
+                const themeLink = document.getElementById('theme-link');
+                if (themeLink.getAttribute('href') === '/static/style.css') {
+                    themeLink.setAttribute('href', '/static/dark-mode.css');
+                } else {
+                    themeLink.setAttribute('href', '/static/style.css');
+                }
             }
         });
-
-        socket.on('game_over', () => {
-            alert('Game over!');
-        });
-
-        function submitAnswer() {
-            const answer = document.getElementById('answer').value;
-            socket.emit('answer', { room, username, answer });
-            document.getElementById('answer').value = '';
-        }
-
-        document.getElementById('chatForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const message = document.getElementById('chatMessage').value;
-            socket.emit('send_message', { room: room, username: username, message: message });
-            document.getElementById('chatMessage').value = '';
-        });
-
-        socket.on('receive_message', (data) => {
-            const chatBox = document.getElementById('chatBox');
-            const messageElement = document.createElement('p');
-            messageElement.textContent = `${data.username}: ${data.message}`;
-            chatBox.appendChild(messageElement);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-
-        function showDiceRoller() {
-            document.getElementById('diceRollerModal').style.display = 'block';
-        }
-
-        function closeDiceRoller() {
-            document.getElementById('diceRollerModal').style.display = 'none';
-        }
-
-        function rollDice() {
-            const numDice = document.getElementById('numDice').value;
-            const diceSides = document.getElementById('diceSides').value;
-            const rollCommand = `/roll ${numDice}d${diceSides}`;
-            socket.emit('send_message', { room: room, username: username, message: rollCommand });
-            closeDiceRoller();
-        }
-
-        // Make the modal draggable
-        const modal = document.getElementById('diceRollerModal');
-        const modalContent = document.querySelector('.modal-content');
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        modalContent.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            offsetX = e.clientX - modalContent.getBoundingClientRect().left;
-            offsetY = e.clientY - modalContent.getBoundingClientRect().top;
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                modalContent.style.left = `${e.clientX - offsetX}px`;
-                modalContent.style.top = `${e.clientY - offsetY}px`;
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-
-        function toggleDarkMode() {
-            const themeLink = document.getElementById('theme-link');
-            if (themeLink.getAttribute('href') === '/static/style.css') {
-                themeLink.setAttribute('href', '/static/dark-mode.css');
-            } else {
-                themeLink.setAttribute('href', '/static/style.css');
-            }
-        }
     </script>
 </body>
 </html>
