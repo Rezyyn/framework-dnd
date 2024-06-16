@@ -2,7 +2,7 @@ import re
 from random import randint
 
 # Existing imports...
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from flask_login import LoginManager, current_user, login_required
 from db import db
@@ -29,10 +29,11 @@ def inject_user():
     return dict(current_user=current_user)
 
 # Register blueprints
-from views import auth_bp
+from views import auth_bp, admin_bp
 from profile import profile_bp
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(profile_bp)
 
 rooms = {}
@@ -116,6 +117,15 @@ def handle_send_message(data):
 
     rooms[room]['messages'].append({'username': username, 'message': message})
     emit('receive_message', {'username': username, 'message': message}, room=room)
+
+@socketio.on('map_ping')
+@login_required
+def handle_map_ping(data):
+    emit('map_ping', data, room=data['room'])
+
+@socketio.on('layer_change')
+def handle_layer_change():
+    emit('layer_update', broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

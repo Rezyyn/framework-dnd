@@ -1,12 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from db import db
-from models import User, Role, Question
+from models import User, Role, Question, GeoJSONLayer
 from forms import LoginForm, RegistrationForm
 from decorators import role_required
+import json
+from werkzeug.security import generate_password_hash, check_password_hash
 
 auth_bp = Blueprint('auth', __name__)
+admin_bp = Blueprint('admin', __name__)
 
+# Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -37,71 +41,75 @@ def logout():
     logout_user()
     return redirect(url_for('auth.login'))
 
-@auth_bp.route('/admin')
+# Admin routes
+@admin_bp.route('/')
 @login_required
 @role_required('Admin')
 def admin():
     users = User.query.all()
     roles = Role.query.all()
-    return render_template('admin.html', title='Admin', users=users, roles=roles)
+    geojson_layers = GeoJSONLayer.query.all()
+    return render_template('admin.html', title='Admin', users=users, roles=roles, geojson_layers=geojson_layers)
 
-@auth_bp.route('/user_management')
+@admin_bp.route('/user_management')
 @login_required
 @role_required('Admin')
 def user_management():
     users = User.query.all()
     return render_template('user_management.html', users=users)
 
-@auth_bp.route('/add_question', methods=['GET', 'POST'])
+@admin_bp.route('/add_question', methods=['GET', 'POST'])
 @login_required
 @role_required('Admin')
 def add_question():
     if request.method == 'POST':
         question_text = request.form['question']
         answer_text = request.form['answer']
-        new_question = Question(question=question_text, answer=answer_text)
-        db.session.add(new_question)
+        question = Question(question=question_text, answer=answer_text)
+        db.session.add(question)
         db.session.commit()
         flash('Question added successfully!', 'success')
-        return redirect(url_for('auth.list_questions'))
+        return redirect(url_for('admin.add_question'))
     return render_template('add_question.html')
 
-@auth_bp.route('/list_questions')
+@admin_bp.route('/upload_geojson', methods=['POST'])
 @login_required
 @role_required('Admin')
-def list_questions():
-    questions = Question.query.all()
-    return render_template('list_questions.html', questions=questions)
-
-@auth_bp.route('/delete_question/<int:question_id>', methods=['POST'])
-@login_required
-@role_required('Admin')
-def delete_question(question_id):
-    question = Question.query.get_or_404(question_id)
-    db.session.delete(question)
-    db.session.commit()
-    flash('Question deleted successfully!', 'success')
-    return redirect(url_for('auth.list_questions'))
-
-@auth_bp.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
-@login_required
-@role_required('Admin')
-def edit_user(user_id):
-    user = User.query.get_or_404(user_id)
-    if request.method == 'POST':
-        user.username = request.form['username']
-        user.email = request.form['email']
+def upload_geojson():
+    file = request.files['geojson_file']
+    if file:
+        data = file.read().decode('utf-8')
+        layer = GeoJSONLayer(name=file.filename, data=data)
+        db.session.add(layer)
         db.session.commit()
-        flash('User updated successfully!', 'success')
-        return redirect(url_for('auth.user_management'))
-    return render_template('edit_user.html', user=user)
+        flash('GeoJSON file uploaded successfully!', 'success')
+    return redirect(url_for('admin.admin'))
 
-@auth_bp.route('/delete_user/<int:user_id>', methods=['POST'])
+@admin_bp.route('/toggle_layer/<int:layer_id>', methods=['POST'])
 @login_required
 @role_required('Admin')
-def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    flash('User deleted successfully!', 'success')
-    return redirect(url_for('auth.user_management'))
+def toggle_layer(layer_id):
+    layer = GeoJSONLayer.query.get(layer_id)
+    if layer:
+        layer.active = not layer.active
+        db.session.commit()
+        flash(f'Layer {"activated" if layer.active else "deactivated"} successfully!', 'success')
+    return redirect(url_for('admin.admin'))
+
+@admin_bp.route('/delete_layer/<int:layer_id>', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_layer(layer_id):
+    layer = GeoJSONLayer.query.get(layer_id)
+    if layer:
+        db.session.delete(layer)
+        db.session.commit()
+        flash('Layer deleted successfully!', 'success')
+    return redirect(url_for('admin.admin'))
+
+@admin_bp.route('/get_geojson')
+@login_required
+def get_geojson():
+    active_layers = GeoJSONLayer.query.filter_by(active=True).all()
+    features = [json.loads(layer.data) for layer in active_layers]
+    return jsonify(features)
