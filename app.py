@@ -6,13 +6,16 @@ from flask_login import LoginManager, current_user, login_required
 from db import db
 from models import User, Question, Role, GeoJSONLayer, Room
 import random
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dnd.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-db.init_app(app)
+migrate = Migrate(app, db)
 socketio = SocketIO(app)
 
 login_manager = LoginManager(app)
@@ -27,7 +30,7 @@ def inject_user():
     return dict(current_user=current_user)
 
 # Register blueprints
-from views import auth_bp, admin_bp
+from views import *
 from profile import profile_bp
 
 app.register_blueprint(auth_bp, url_prefix='/auth')

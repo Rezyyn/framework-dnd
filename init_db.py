@@ -1,11 +1,7 @@
-from db import db
-from models import User, Role, Question, GeoJSONLayer, Room, RoomLayers
+# db.py
+from flask_sqlalchemy import SQLAlchemy
 
-def init_db():
-    db.create_all()
-    # Add any initial data if necessary
+db = SQLAlchemy()
 
-if __name__ == '__main__':
-    from app import app
-    with app.app_context():
-        init_db()
+def init_db(app):
+    db.init_app(app)
