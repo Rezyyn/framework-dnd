@@ -6,7 +6,7 @@ from forms import LoginForm, RegistrationForm
 from decorators import role_required
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from flask_socketio import SocketIO
 auth_bp = Blueprint('auth', __name__)
 admin_bp = Blueprint('admin', __name__)
 
