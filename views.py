@@ -6,7 +6,8 @@ from forms import LoginForm, RegistrationForm
 from decorators import role_required
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_socketio import SocketIO
+from app import socketio
+
 auth_bp = Blueprint('auth', __name__)
 admin_bp = Blueprint('admin', __name__)
 
@@ -50,7 +51,7 @@ def admin():
     roles = Role.query.all()
     geojson_layers = GeoJSONLayer.query.all()
     rooms = Room.query.all()
-    return render_template('admin.html', title='Admin', users=users, roles=roles, geojson_layers=geojson_layers, rooms=rooms)
+    return render_template('admin/admin.html', title='Admin', users=users, roles=roles, geojson_layers=geojson_layers, rooms=rooms)
 
 @admin_bp.route('/user_management')
 @login_required
@@ -106,21 +107,39 @@ def upload_geojson():
 
 @admin_bp.route('/toggle_layer/<int:layer_id>/<int:room_id>', methods=['POST'])
 @login_required
-@role_required('Admin')
 def toggle_layer(layer_id, room_id):
     layer = GeoJSONLayer.query.get(layer_id)
     room = Room.query.get(room_id)
-    if layer and room:
-        if layer in room.active_layers:
-            room.active_layers.remove(layer)
-            action = 'deactivated'
-        else:
-            room.active_layers.append(layer)
-            action = 'activated'
-        db.session.commit()
-        flash(f'Layer {action} successfully!', 'success')
-        socketio.emit('layer_update', {'room_id': room_id}, broadcast=True)
-    return redirect(url_for('admin.admin'))
+
+    if layer in room.active_layers:
+        room.active_layers.remove(layer)
+        action = "deactivated"
+    else:
+        room.active_layers.append(layer)
+        action = "activated"
+
+    db.session.commit()
+
+    # Debugging information
+    if not socketio.server:
+        print("socketio.server is None")
+    print(f"socketio instance in toggle_layer: {socketio}")
+
+    try:
+        socketio.emit('layer_update', {'room_id': room_id}, broadcast=True)  # Emit the layer update event
+    except Exception as e:
+        print(f"Error emitting socket event: {e}")
+
+    flash(f'Layer {layer.name} has been {action}.', 'success')
+    return redirect(url_for('admin.manage_layers'))
+
+
+@admin_bp.route('/manage_layers')
+@login_required
+def manage_layers():
+    layers = GeoJSONLayer.query.all()
+    rooms = Room.query.all()
+    return render_template('admin/manage_layers.html', layers=layers, rooms=rooms)
 
 @admin_bp.route('/delete_layer/<int:layer_id>', methods=['POST'])
 @login_required

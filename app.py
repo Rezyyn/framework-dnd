@@ -3,20 +3,21 @@ import random
 from random import randint
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
-from flask_login import LoginManager, current_user, login_required
+from flask_login import LoginManager, current_user, login_required, UserMixin
 from flask_migrate import Migrate
 from db import db, init_db
-from models import User, Question, Role, GeoJSONLayer, Room
-from config import Config  # Import the configuration settings
+from models import User, Question, Role, Room, UserRoles
+from config import Config
+
+socketio = SocketIO()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)  # Apply the configuration settings
+    app.config.from_object(Config)
 
-    # Initialize the database and migration instances
     init_db(app)
     migrate = Migrate(app, db)
-    socketio = SocketIO(app)
+    socketio.init_app(app)
     login_manager = LoginManager(app)
     login_manager.login_view = 'auth.login'
 
@@ -28,7 +29,6 @@ def create_app():
     def inject_user():
         return dict(current_user=current_user)
 
-    # Register blueprints
     from views import auth_bp, admin_bp
     from profile import profile_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -71,7 +71,7 @@ def create_app():
         emit('player_joined', {'username': username}, room=room)
         emit('update_scores', rooms[room]['scores'], room=room)
         if rooms[room]['questions']:
-            question = rooms[room]['questions'][0]
+            question = Question.query.get(rooms[room]['questions'][0].id)
             emit('new_question', {'question': question.question}, room=room)
 
     @socketio.on('answer')
@@ -87,7 +87,7 @@ def create_app():
                 rooms[room]['questions'].pop(0)
             emit('update_scores', rooms[room]['scores'], room=room)
             if rooms[room]['questions']:
-                question = rooms[room]['questions'][0]
+                question = Question.query.get(rooms[room]['questions'][0].id)
                 emit('new_question', {'question': question.question}, room=room)
             else:
                 emit('game_over', room=room)
@@ -127,10 +127,11 @@ def create_app():
     def handle_layer_change():
         emit('layer_update', broadcast=True)
 
-    return app, socketio
+    return app
 
 if __name__ == '__main__':
-    app, socketio = create_app()
+    app = create_app()
     with app.app_context():
         db.create_all()
+    print(f"socketio instance at startup: {socketio}")  # Debugging information
     socketio.run(app, debug=True)

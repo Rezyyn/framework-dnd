@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Manage Layers
+{% endblock %}
+
+{% block content %}
+    <h1>Manage Layers</h1>
+    {% for room in rooms %}
+    <h2>Room {{ room.name }}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Layer Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for layer in layers %}
+            <tr>
+                <td>{{ layer.name }}</td>
+                <td>
+                    <form action="{{ url_for('admin.toggle_layer', layer_id=layer.id, room_id=room.id) }}" method="POST" style="display:inline;">
+                        <button type="submit">{{ "Deactivate" if layer in room.active_layers else "Activate" }}</button>
+                    </form>
+                    <form action="{{ url_for('admin.delete_layer', layer_id=layer.id) }}" method="POST" style="display:inline;">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+{% endblock %}
